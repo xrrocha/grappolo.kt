@@ -4,11 +4,11 @@ internal data class Score<T>(val first: T, val second: T, val distance: Double)
 
 fun <T> cluster(
     entries: Set<T>,
-    generatePais: (Set<T>) -> Iterable<Pair<T, T>>,
+    generatePairs: (Set<T>) -> Iterable<Pair<T, T>>,
     computeDistance: (T, T) -> Double,
     maxDistance: Double
 ): Pair<Double, Set<Set<T>>> =
-    generatePais(entries)
+    generatePairs(entries)
         .map { (first, second) ->
             Score(first, second, computeDistance(first, second))
         }
