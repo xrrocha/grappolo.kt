@@ -21,7 +21,7 @@ fun <T> cluster(
             data class Step(
                 val distance: Double,
                 val clusters: List<Set<T>>,
-                val value: Double,
+                val quality: Double,
                 val remainingDistances: List<Double>
             )
             generateSequence(
@@ -37,12 +37,12 @@ fun <T> cluster(
                 } else {
                     val distance = previous.remainingDistances.first()
                     val clusters = cluster(entries, scores.takeWhile { it.distance <= distance })
-                    val value = clusters.size * clusters.size * distance / entries.size
-                    if (value > previous.value) {
+                    val quality = clusters.size * clusters.size * distance / entries.size
+                    if (quality > previous.quality) {
                         null
                     } else {
                         val nextDistances = previous.remainingDistances.drop(1)
-                        Step(distance, clusters, value, nextDistances)
+                        Step(distance, clusters, quality, nextDistances)
                     }
                 }
             }
