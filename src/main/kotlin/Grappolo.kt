@@ -1,47 +1,13 @@
 package grappolo
 
-import info.debatty.java.stringsimilarity.Damerau
-import kotlin.math.max
-
-data class Score<T>(val first: T, val second: T, val distance: Double)
-
-fun main(args: Array<String>) {
-    val entries = setOf(
-        "acmilo", "alejandro", "alejnadro", "andra",
-        "camila", "camilla", "camilo", "cmila", "cmilo",
-        "deigo", "diego", "digo", "laejandro", "rcardo",
-        "ricardo", "ricrdo", "sandar", "sandra", "snadra",
-    )
-    val generatePairs = { set: Set<String> ->
-        set.toList().let { list ->
-            list.indices.flatMap { i ->
-                ((i + 1)..<list.size).map { j ->
-                    list[i] to list[j]
-                }
-            }
-        }
-    }
-    val computeDistance =
-        Damerau().let { damerau ->
-            { first: String, second: String ->
-                damerau.distance(first, second) /
-                        max(first.length, second.length).toDouble()
-            }
-        }
-    val maxDistance = 0.5
-
-    val (distance, clusters) =
-        cluster(entries, generatePairs, computeDistance, maxDistance)
-    println("Optimal distance: $distance")
-    clusters.forEach(::println)
-}
+internal data class Score<T>(val first: T, val second: T, val distance: Double)
 
 fun <T> cluster(
     entries: Set<T>,
     generatePais: (Set<T>) -> Iterable<Pair<T, T>>,
     computeDistance: (T, T) -> Double,
     maxDistance: Double
-): Pair<Double, List<Set<T>>> =
+): Pair<Double, Set<Set<T>>> =
     generatePais(entries)
         .map { (first, second) ->
             Score(first, second, computeDistance(first, second))
@@ -82,11 +48,11 @@ fun <T> cluster(
             }
                 .last()
                 .let { step ->
-                    step.distance to step.clusters
+                    step.distance to step.clusters.toSet()
                 }
         }
 
-fun <T> cluster(
+internal fun <T> cluster(
     entries: Set<T>,
     scores: List<Score<T>>
 ): List<Set<T>> =
@@ -101,5 +67,3 @@ fun <T> cluster(
                 .values
                 .distinct()
         }
-
-fun Double.format() = String.format("%.4f", this)
