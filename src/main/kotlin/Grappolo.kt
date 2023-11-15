@@ -57,16 +57,14 @@ fun <T> cluster(
                     if (quality <= previousStep.quality) {
                         null
                     } else {
-                        val nextDistances =
-                            previousStep.remainingDistances.drop(1)
-                        val nextScores =
+                        Step(
+                            distance, quality, clusterMap,
+                            previousStep.remainingDistances.drop(1),
                             previousStep.remainingScores.drop(scores.size)
-                        Step(distance, quality, clusterMap, nextDistances, nextScores)
+                        )
                     }
                 }
             }
                 .last()
-                .let { step ->
-                    step.distance to step.clusterMap.values.toSet()
-                }
+                .let { step -> step.distance to step.clusterMap.values.toSet() }
         }
