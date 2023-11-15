@@ -40,10 +40,8 @@ fun <T> cluster(
                 } else {
                     val distance =
                         previousStep.remainingDistances.first()
-                    val nextDistances =
-                        previousStep.remainingDistances.drop(1)
-                    val (scores, nextScores) =
-                        previousStep.remainingScores.partition {
+                    val scores =
+                        previousStep.remainingScores.takeWhile {
                             it.distance <= distance
                         }
                     val clusterMap =
@@ -53,11 +51,16 @@ fun <T> cluster(
                             (soFar + mergedSet.associateWith { mergedSet })
                         }
                     val clusters = clusterMap.values.distinct()
-                    val clusterCount = (entries.size - clusters.size) / (entries.size - 1.0)
+                    val clusterCount =
+                        (entries.size - clusters.size) / (entries.size - 1.0)
                     val quality = (1.0 - distance) * clusterCount
                     if (quality <= previousStep.quality) {
                         null
                     } else {
+                        val nextDistances =
+                            previousStep.remainingDistances.drop(1)
+                        val nextScores =
+                            previousStep.remainingScores.drop(scores.size)
                         Step(distance, quality, clusterMap, nextDistances, nextScores)
                     }
                 }
