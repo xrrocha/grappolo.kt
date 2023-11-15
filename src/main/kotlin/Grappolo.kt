@@ -28,7 +28,7 @@ fun <T> cluster(
                 Step(
                     0.0,
                     entries.map { setOf(it) },
-                    Double.MAX_VALUE,
+                    0.0,
                     distances
                 )
             ) { previous ->
@@ -37,8 +37,10 @@ fun <T> cluster(
                 } else {
                     val distance = previous.remainingDistances.first()
                     val clusters = cluster(entries, scores.takeWhile { it.distance <= distance })
-                    val quality = clusters.size * clusters.size * distance / entries.size
-                    if (quality > previous.quality) {
+                    val clusterFactor = (entries.size - clusters.size) / (entries.size - 1.0)
+                    val quality = (1.0 - distance) * clusterFactor
+                    println("clusters: ${clusters.size}, clusterFactor: $clusterFactor, quality: $quality")
+                    if (quality <= previous.quality) {
                         null
                     } else {
                         val nextDistances = previous.remainingDistances.drop(1)
