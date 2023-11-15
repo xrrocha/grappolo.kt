@@ -17,10 +17,7 @@ fun <T> cluster(
         .let { allScores ->
             val allDistances =
                 allScores.map(Score<T>::distance).distinct().sorted()
-
             val seedClusterMap = entries.associateWith(::setOf)
-            fun <T> List<T>.headAndTail(): Pair<T, List<T>> =
-                Pair(first(), drop(1))
 
             data class Step(
                 val distance: Double,
@@ -30,25 +27,27 @@ fun <T> cluster(
                 val remainingScores: List<Score<T>>,
             )
 
-            val firstStep = Step(
+            val initialStep = Step(
                 distance = 0.0,
                 quality = 0.0,
-                seedClusterMap, allDistances, allScores
+                clusterMap = seedClusterMap,
+                remainingDistances = allDistances,
+                remainingScores = allScores
             )
-            generateSequence(firstStep) { previous ->
-                if (previous.remainingDistances.isEmpty()) {
+            generateSequence(initialStep) { previousStep ->
+                if (previousStep.remainingDistances.isEmpty()) {
                     null
                 } else {
                     val distance =
-                        previous.remainingDistances.first()
+                        previousStep.remainingDistances.first()
                     val nextDistances =
-                        previous.remainingDistances.drop(1)
+                        previousStep.remainingDistances.drop(1)
                     val (scores, nextScores) =
-                        previous.remainingScores.partition {
+                        previousStep.remainingScores.partition {
                             it.distance <= distance
                         }
                     val clusterMap =
-                        scores.fold(previous.clusterMap) { soFar, score ->
+                        scores.fold(previousStep.clusterMap) { soFar, score ->
                             val mergedSet =
                                 (soFar[score.first]!! + soFar[score.second]!!)
                             (soFar + mergedSet.associateWith { mergedSet })
@@ -56,7 +55,7 @@ fun <T> cluster(
                     val clusters = clusterMap.values.distinct()
                     val clusterCount = (entries.size - clusters.size) / (entries.size - 1.0)
                     val quality = (1.0 - distance) * clusterCount
-                    if (quality <= previous.quality) {
+                    if (quality <= previousStep.quality) {
                         null
                     } else {
                         Step(distance, quality, clusterMap, nextDistances, nextScores)
