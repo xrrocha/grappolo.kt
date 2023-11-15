@@ -29,12 +29,20 @@ fun main() {
         cluster(words, generatePairs, computeDistance, maxDistance)
     }
     val (optimalDistance, clusters) = result
-    println("Time: $elapsedTime")
     println("Optimal distance: $optimalDistance")
     clusters
         .sortedBy { it.size }
-        .forEach(::println)
-
+        .withIndex()
+        .forEach { (index, cluster) ->
+           listOf(
+               index + 1,
+               cluster.size,
+               cluster
+           )
+               .joinToString("\t")
+               .also(::println)
+        }
+    println("Time: $elapsedTime")
 }
 
 fun <A> time(block: () -> A) =

@@ -39,7 +39,6 @@ fun <T> cluster(
                     val clusters = cluster(entries, scores.takeWhile { it.distance <= distance })
                     val clusterFactor = (entries.size - clusters.size) / (entries.size - 1.0)
                     val quality = (1.0 - distance) * clusterFactor
-                    println("clusters: ${clusters.size}, clusterFactor: $clusterFactor, quality: $quality")
                     if (quality <= previous.quality) {
                         null
                     } else {
