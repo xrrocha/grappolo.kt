@@ -1,10 +1,8 @@
+import grappolo.Distances
 import grappolo.cluster
-import info.debatty.java.stringsimilarity.Damerau
-import kotlin.math.max
 
 fun main() {
     val words = resourceLines("words.txt")
-        .take(5000)
         .map { it.split("\t")[0] }
         .toSet()
     val generatePairs = { set: Set<String> ->
@@ -16,13 +14,7 @@ fun main() {
             }
         }
     }
-    val computeDistance =
-        Damerau().let { damerau ->
-            { first: String, second: String ->
-                damerau.distance(first, second) /
-                        max(first.length, second.length).toDouble()
-            }
-        }
+    val computeDistance = Distances::damerau
     val maxDistance = 0.5
 
     val (result, elapsedTime) = time {
@@ -34,26 +26,13 @@ fun main() {
         .sortedBy { it.size }
         .withIndex()
         .forEach { (index, cluster) ->
-           listOf(
-               index + 1,
-               cluster.size,
-               cluster
-           )
-               .joinToString("\t")
-               .also(::println)
+            listOf(
+                index + 1,
+                cluster.size,
+                cluster
+            )
+                .joinToString("\t")
+                .also(::println)
         }
     println("Time: $elapsedTime")
 }
-
-fun <A> time(block: () -> A) =
-    System.currentTimeMillis().let { startTime ->
-        block().let { result ->
-            result to System.currentTimeMillis() - startTime
-        }
-    }
-
-fun resourceLines(resourceName: String) =
-    Thread.currentThread().contextClassLoader
-        .getResourceAsStream(resourceName)!!
-        .reader().buffered()
-        .lineSequence()

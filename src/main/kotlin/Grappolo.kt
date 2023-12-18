@@ -1,6 +1,12 @@
 package grappolo
 
+import java.time.Instant
+
 internal data class Score<T>(val first: T, val second: T, val distance: Double)
+
+interface ClusteringListener<T> {
+    fun entries(entries: Set<T>)
+}
 
 fun <T> cluster(
     entries: Set<T>,
@@ -9,14 +15,25 @@ fun <T> cluster(
     maxDistance: Double
 ): Pair<Double, Set<Set<T>>> =
     generatePairs(entries)
+        .also {
+            println("${Instant.now()}: Scoring ${entries.size} entries")
+        }
         .map { (first, second) ->
             Score(first, second, computeDistance(first, second))
+            // .also(::println)
         }
         .filter { it.distance <= maxDistance }
         .sortedBy(Score<T>::distance)
+        .also {
+            println("${Instant.now()}: Collected ${it.size} scores")
+        }
         .let { allScores ->
-            val allDistances =
+            val distinctDistances =
                 allScores.map(Score<T>::distance).distinct().sorted()
+            val highDistance = distinctDistances.last()
+            val allDistances = distinctDistances.map { distance ->
+                distance / highDistance
+            }
             val seedClusterMap = entries.associateWith(::setOf)
 
             data class Step(
@@ -25,7 +42,9 @@ fun <T> cluster(
                 val clusterMap: Map<T, Set<T>>,
                 val remainingDistances: List<Double>,
                 val remainingScores: List<Score<T>>,
-            )
+            ) {
+                val clusters = clusterMap.values.distinct().sortedBy { it.size }
+            }
 
             val initialStep = Step(
                 distance = 0.0,
@@ -62,9 +81,23 @@ fun <T> cluster(
                             previousStep.remainingDistances.drop(1),
                             previousStep.remainingScores.drop(scores.size)
                         )
+                        /*
+                        .also {
+                            listOf(
+                                it.distance,
+                                it.quality,
+                                it.clusters.size
+                            )
+                                .joinToString("\t")
+                                .also(::println)
+                        }
+                    */
                     }
                 }
             }
                 .last()
                 .let { step -> step.distance to step.clusterMap.values.toSet() }
+                .also {
+                    println("${Instant.now()}: Collected ${it.second.size} clusters")
+                }
         }
