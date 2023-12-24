@@ -32,14 +32,17 @@ class PartitionTest {
             }
         }
 
+        fun Set<Int>.intraDistance(): Double =
+            map { i -> map { j -> elems[i]!![j] ?: damerau(words[i], words[j]) }.average() }.average()
+
         val distances = elems.flatMap { (_, neighbors) -> neighbors.values }.distinct().sorted()
         distances
-            .fold(listOf<Set<Int>>(words.indices.toSet())) { previousClusters, maxDistance ->
+            .fold(setOf<Set<Int>>(words.indices.toSet())) { previousClusters, maxDistance ->
                 // TODO Study effect of favoring less connected clusters first
                 previousClusters.sortedBy { it.size }.flatMap { previousCluster ->
                     val (nextClusters, _) =
                         // TODO Can cluster elements be sorted so as to visit them in "optimal" order?
-                        previousCluster.fold(Pair(emptyList<Set<Int>>(), emptySet<Int>())) { accum, elem ->
+                        previousCluster.fold(Pair(emptySet<Set<Int>>(), emptySet<Int>())) { accum, elem ->
                             val (collectedClusters, clusteredSoFar) = accum
                             if (clusteredSoFar.contains(elem)) accum
                             else {
@@ -61,17 +64,19 @@ class PartitionTest {
                                 Pair(collectedClusters.plusElement(cluster), clusteredSoFar + cluster)
                             }
                         }
-                    nextClusters.distinct()
+                    nextClusters
+                }
+                    .toSet()
                     .also { clusters ->
                         val showClusters =
                             clusters
                                 .sortedBy { -it.size }
                                 .joinToString(", ", "[", "]") { cluster ->
-                                    cluster.map { words[it] }.sorted().joinToString(",")
+                                    cluster.map { words[it] }.sorted().joinToString(",", "[", "]")
                                 }
-                        println("${"%.08f".format(maxDistance)}\t$showClusters")
+                        val avgIntraDistance = clusters.map(Set<Int>::intraDistance).average()
+                        println("${(1.0 - maxDistance) * avgIntraDistance}\t${"%.08f".format(maxDistance)}\t${clusters.size}\t${avgIntraDistance}\t$showClusters")
                     }
-                }
             }
     }
 }
