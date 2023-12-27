@@ -3,6 +3,7 @@ package grappolo
 
 import grappolo.Distances.damerau
 import resourceLines
+import kotlin.math.sqrt
 import kotlin.test.Test
 
 class PartitionTest {
@@ -10,10 +11,12 @@ class PartitionTest {
     fun exploresPartitioning() {
 
         val distanceThreshold = 0.5
-        val countThreshold = 32 // Int.MAX_VALUE
+        val takeCount = 64 //Int.MAX_VALUE
+        val dropCount = 4096
 
         val words = resourceLines("words.txt")
-            .take(countThreshold)
+            .drop(dropCount)
+            .take(takeCount)
             .map { it.split("\t")[0] }
             .toList()
             .sorted()
@@ -75,7 +78,8 @@ class PartitionTest {
                                     cluster.map { words[it] }.sorted().joinToString(",", "[", "]")
                                 }
                         val avgIntraDistance = clusters.map(Set<Int>::intraDistance).average()
-                        println("${(1.0 - maxDistance) * avgIntraDistance}\t${"%.08f".format(maxDistance)}\t${clusters.size}\t${avgIntraDistance}\t$showClusters")
+                        val metric = sqrt((1.0 - maxDistance) * avgIntraDistance)
+                        println("$metric\t${"%.08f".format(maxDistance)}\t${clusters.size}\t${avgIntraDistance}\t$showClusters")
                     }
             }
     }
